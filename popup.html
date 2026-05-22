@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>WP Support Monitor</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+  <h2>WP Support Monitor</h2>
+
+  <div class="card">
+
+    <label>
+      WordPress Support URL
+    </label>
+
+    <input
+      type="text"
+      id="url"
+      placeholder="https://wordpress.org/support/plugin/tutor/"
+    />
+
+    <button id="saveBtn">
+      Start Monitoring
+    </button>
+
+    <div class="active-monitor">
+
+      <div class="monitor-header">
+
+        <span class="live-dot"></span>
+
+        Currently Monitoring
+
+      </div>
+
+      <div
+        id="monitorSite"
+        class="monitor-site"
+      >
+        No active monitoring
+      </div>
+
+    </div>
+
+    <!-- ACTIVITY -->
+
+    <div class="activity-box">
+
+      <div class="activity-title">
+        Recent Activity
+      </div>
+
+      <div id="activityFeed">
+
+        No activity yet
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="footer">
+    Instant WordPress Support Alerts
+  </div>
+
+  <script src="popup.js"></script>
+
+</body>
+
+</html>

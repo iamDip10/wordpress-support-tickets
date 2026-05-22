@@ -1,0 +1,183 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  width: 380px;
+  min-height: 500px;
+  padding: 18px;
+  font-family: Inter, Arial, sans-serif;
+  background: #081225;
+  color: white;
+}
+
+h2 {
+  text-align: center;
+  font-size: 22px;
+  margin-bottom: 18px;
+  font-weight: 700;
+}
+
+.card {
+  background: #0f172a;
+  border-radius: 22px;
+  padding: 18px;
+  border: 1px solid #1e293b;
+}
+
+label {
+  display: block;
+  margin-bottom: 10px;
+  color: #cbd5e1;
+  font-size: 13px;
+}
+
+input {
+  width: 100%;
+  padding: 15px;
+  border-radius: 14px;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: white;
+  outline: none;
+  font-size: 14px;
+}
+
+button {
+  width: 100%;
+  margin-top: 16px;
+  padding: 15px;
+  border: none;
+  border-radius: 16px;
+  background:
+    linear-gradient(
+      135deg,
+      #2563eb,
+      #3b82f6
+    );
+
+  color: white;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.active-monitor {
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: 18px;
+  background: #07101f;
+  border: 1px solid #1e293b;
+}
+
+.monitor-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.live-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #22c55e;
+  animation: pulse 1.5s infinite;
+}
+
+.monitor-site {
+  background:
+    rgba(59,130,246,0.08);
+
+  border:
+    1px solid
+    rgba(59,130,246,0.15);
+
+  padding: 14px;
+  border-radius: 14px;
+
+  color: #60a5fa;
+
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.activity-box {
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: 18px;
+  background: #07101f;
+  border: 1px solid #1e293b;
+}
+
+.activity-title {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+
+.activity-item {
+  display: block;
+  text-decoration: none;
+
+  padding: 12px;
+
+  border-radius: 14px;
+
+  background:
+    rgba(59,130,246,0.08);
+
+  border:
+    1px solid
+    rgba(59,130,246,0.15);
+
+  margin-bottom: 12px;
+
+  transition: 0.2s ease;
+}
+
+.activity-item:hover {
+  transform: translateY(-1px);
+}
+
+.activity-item-title {
+  color: #60a5fa;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.activity-item-meta {
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+.footer {
+  text-align: center;
+  margin-top: 18px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+@keyframes pulse {
+
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(1.4);
+    opacity: 0.6;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+}
