@@ -192,9 +192,7 @@ async function checkSupportForum() {
       });
 
       const uniqueId =
-        link +
-        freshnessTime +
-        replies;
+  `${link}_${replies}`;
 
       /* =========================
          NEW DETECTED
@@ -236,16 +234,19 @@ async function checkSupportForum() {
    SMART ACTIVITY UPDATE
 ========================= */
 
+
 const existingIndex =
   recentActivity.findIndex(
     item =>
-      item.link === link
+      item.link === link &&
+      item.type === type
   );
 
 const newItem = {
   title,
   type,
   link,
+  replies,
   time:
     new Date()
     .toLocaleTimeString()
@@ -271,6 +272,18 @@ recentActivity =
   recentActivity.slice(0, 10);
 
         knownTopics[uniqueId] = true;
+
+
+const keys =
+  Object.keys(knownTopics);
+
+if (keys.length > 200) {
+
+  delete knownTopics[
+    keys[0]
+  ];
+
+}
 
       }
 
