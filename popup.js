@@ -1,8 +1,12 @@
 const saveBtn =
-  document.getElementById("saveBtn");
+  document.getElementById(
+    "saveBtn"
+  );
 
 const monitorSite =
-  document.getElementById("monitorSite");
+  document.getElementById(
+    "monitorSite"
+  );
 
 const activityFeed =
   document.getElementById(
@@ -50,6 +54,8 @@ function extractPluginName(url) {
 
 function renderActivity(items) {
 
+  activityFeed.innerHTML = "";
+
   if (!items.length) {
 
     activityFeed.innerHTML = `
@@ -60,8 +66,6 @@ function renderActivity(items) {
 
     return;
   }
-
-  activityFeed.innerHTML = "";
 
   items.forEach(item => {
 
@@ -99,15 +103,16 @@ async function loadActivity() {
       "recentActivity"
     ]);
 
-  renderActivity(
-    data.recentActivity || []
-  );
+  const activity =
+    data.recentActivity || [];
+
+  renderActivity(activity);
 
 }
 
 
 /* =========================
-   LOAD INITIAL DATA
+   INITIAL LOAD
 ========================= */
 
 window.addEventListener(
@@ -116,13 +121,8 @@ window.addEventListener(
 
     const data =
       await chrome.storage.local.get([
-        "monitorUrl",
-        "recentActivity"
+        "monitorUrl"
       ]);
-
-    /* =========================
-       MONITORING INFO
-    ========================= */
 
     if (data.monitorUrl) {
 
@@ -144,13 +144,7 @@ window.addEventListener(
 
     }
 
-    /* =========================
-       ACTIVITY
-    ========================= */
-
-    renderActivity(
-      data.recentActivity || []
-    );
+    loadActivity();
 
   }
 );
@@ -179,54 +173,20 @@ saveBtn.addEventListener(
       return;
     }
 
-    /* =========================
-       GET PREVIOUS URL
-    ========================= */
+    /* CLEAR OLD */
 
-    const oldData =
-      await chrome.storage.local.get([
-        "monitorUrl"
-      ]);
+    await chrome.storage.local.remove([
+      "recentActivity",
+      "knownTopics"
+    ]);
 
-    const oldUrl =
-      oldData.monitorUrl || "";
-
-    /* =========================
-       URL CHANGED
-    ========================= */
-
-    if (oldUrl !== url) {
-
-      console.log(
-        "New URL detected. Cleaning old data..."
-      );
-
-      await chrome.storage.local.remove([
-        "recentActivity",
-        "knownTopics"
-      ]);
-
-      /* CLEAR UI */
-
-      activityFeed.innerHTML = `
-        <div class="empty-state">
-          No activity yet
-        </div>
-      `;
-
-    }
-
-    /* =========================
-       SAVE NEW URL
-    ========================= */
+    /* SAVE */
 
     await chrome.storage.local.set({
       monitorUrl: url
     });
 
-    /* =========================
-       UPDATE UI
-    ========================= */
+    /* UI */
 
     const pluginName =
       extractPluginName(url);
@@ -237,18 +197,14 @@ saveBtn.addEventListener(
     saveBtn.innerText =
       "Monitoring Active";
 
-    /* =========================
-       RELOAD ACTIVITY
-    ========================= */
-
-    loadActivity();
+    renderActivity([]);
 
   }
 );
 
 
 /* =========================
-   LIVE UI AUTO REFRESH
+   AUTO REFRESH
 ========================= */
 
 setInterval(() => {
@@ -257,7 +213,7 @@ setInterval(() => {
 
 
 /* =========================
-   INITIAL LOAD
+   INITIAL
 ========================= */
 
 loadActivity();
