@@ -4,10 +4,6 @@ let monitoringStarted = false;
 let firstRun = true;
 
 
-/* =========================
-   STARTUP
-========================= */
-
 chrome.runtime.onInstalled.addListener(() => {
   startMonitoring();
 });
@@ -16,10 +12,6 @@ chrome.runtime.onStartup.addListener(() => {
   startMonitoring();
 });
 
-
-/* =========================
-   START MONITORING
-========================= */
 
 function startMonitoring() {
 
@@ -43,10 +35,6 @@ function startMonitoring() {
 
 }
 
-
-/* =========================
-   NOTIFICATION
-========================= */
 
 function triggerNotification(
   title,
@@ -76,9 +64,6 @@ function triggerNotification(
 }
 
 
-/* =========================
-   SAVE ACTIVITY
-========================= */
 
 async function addActivity(
   title,
@@ -125,9 +110,6 @@ async function addActivity(
 }
 
 
-/* =========================
-   MAIN CHECKER
-========================= */
 
 async function checkSupportForum() {
 
@@ -163,9 +145,6 @@ async function checkSupportForum() {
     let knownTopics =
       data.knownTopics || {};
 
-    /* =========================
-       GET TOPICS
-    ========================= */
 
     const topicMatches = [
       ...html.matchAll(
@@ -185,9 +164,6 @@ async function checkSupportForum() {
 
       const block = match[0];
 
-      /* =========================
-         TITLE + LINK
-      ========================= */
 
       const titleMatch =
         block.match(
@@ -204,9 +180,6 @@ async function checkSupportForum() {
           .replace(/<[^>]+>/g, "")
           .trim();
 
-      /* =========================
-         STARTED BY
-      ========================= */
 
       const startedMatch =
         block.match(
@@ -220,10 +193,6 @@ async function checkSupportForum() {
               .toLowerCase()
           : "";
 
-      /* =========================
-         LAST USER
-      ========================= */
-
       const freshnessMatch =
         block.match(
           /bbp-topic-freshness-author[\s\S]*?bbp-author-name">(.*?)<\/span>/s
@@ -236,20 +205,33 @@ async function checkSupportForum() {
               .toLowerCase()
           : "";
 
-      /* =========================
-         FILTER
-         ONLY IF SAME USER
-      ========================= */
 
-      if (
-        startedBy !== lastUser
-      ) {
-        continue;
-      }
+if (
+  startedBy !== lastUser
+) {
 
-      /* =========================
-         NEW TOPIC ONLY
-      ========================= */
+  /* REMOVE FROM RECENT ACTIVITY */
+
+  const storage =
+    await chrome.storage.local.get([
+      "recentActivity"
+    ]);
+
+  let recentActivity =
+    storage.recentActivity || [];
+
+  recentActivity =
+    recentActivity.filter(
+      item => item.link !== link
+    );
+
+  await chrome.storage.local.set({
+    recentActivity
+  });
+
+  continue;
+}
+
 
       if (!knownTopics[link]) {
 
@@ -301,10 +283,6 @@ async function checkSupportForum() {
 
 }
 
-
-/* =========================
-   CLICK NOTIFICATION
-========================= */
 
 chrome.notifications.onClicked.addListener(
   (id) => {

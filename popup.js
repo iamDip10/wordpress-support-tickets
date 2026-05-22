@@ -14,9 +14,6 @@ const activityFeed =
   );
 
 
-/* =========================
-   EXTRACT PLUGIN NAME
-========================= */
 
 function extractPluginName(url) {
 
@@ -47,10 +44,6 @@ function extractPluginName(url) {
 
 }
 
-
-/* =========================
-   RENDER ACTIVITY
-========================= */
 
 function renderActivity(items) {
 
@@ -92,9 +85,6 @@ function renderActivity(items) {
 }
 
 
-/* =========================
-   LOAD ACTIVITY
-========================= */
 
 async function loadActivity() {
 
@@ -110,10 +100,6 @@ async function loadActivity() {
 
 }
 
-
-/* =========================
-   INITIAL LOAD
-========================= */
 
 window.addEventListener(
   "DOMContentLoaded",
@@ -150,9 +136,6 @@ window.addEventListener(
 );
 
 
-/* =========================
-   SAVE URL
-========================= */
 
 saveBtn.addEventListener(
   "click",
@@ -203,9 +186,6 @@ saveBtn.addEventListener(
 );
 
 
-/* =========================
-   AUTO REFRESH
-========================= */
 
 setInterval(() => {
   loadActivity();
