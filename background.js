@@ -1,10 +1,11 @@
 const CHECK_EVERY = 15000;
 
 let monitoringStarted = false;
+let firstRun = true;
 
 
 /* =========================
-   START
+   STARTUP
 ========================= */
 
 chrome.runtime.onInstalled.addListener(() => {
@@ -17,7 +18,7 @@ chrome.runtime.onStartup.addListener(() => {
 
 
 /* =========================
-   START MONITOR
+   START MONITORING
 ========================= */
 
 function startMonitoring() {
@@ -26,11 +27,19 @@ function startMonitoring() {
 
   monitoringStarted = true;
 
-  console.log("WP Monitor Started");
+  console.log("WP Support Monitor Started");
+
+  /* FIRST CHECK */
+
+  checkSupportForum();
+
+  /* REALTIME LOOP */
 
   setInterval(() => {
     checkSupportForum();
   }, CHECK_EVERY);
+
+  /* BACKUP ALARM */
 
   chrome.alarms.create("backupCheck", {
     periodInMinutes: 1
@@ -43,13 +52,99 @@ function startMonitoring() {
    BACKUP CHECK
 ========================= */
 
-chrome.alarms.onAlarm.addListener((alarm) => {
+chrome.alarms.onAlarm.addListener(
+  (alarm) => {
 
-  if (alarm.name === "backupCheck") {
-    checkSupportForum();
+    if (
+      alarm.name === "backupCheck"
+    ) {
+      checkSupportForum();
+    }
+
   }
+);
 
-});
+
+/* =========================
+   NOTIFICATION
+========================= */
+
+function triggerNotification(
+  type,
+  title,
+  author,
+  link
+) {
+
+  chrome.notifications.create({
+    type: "basic",
+
+    iconUrl:
+      chrome.runtime.getURL(
+        "icons/icon128.png"
+      ),
+
+    title: `🚨 ${type}`,
+
+    message:
+      `${title}\nBy: ${author}`,
+
+    priority: 2
+  });
+
+}
+
+
+/* =========================
+   SAVE ACTIVITY
+========================= */
+
+async function addActivity(
+  title,
+  type,
+  link
+) {
+
+  const storage =
+    await chrome.storage.local.get([
+      "recentActivity"
+    ]);
+
+  let recentActivity =
+    storage.recentActivity || [];
+
+  /* REMOVE OLD DUPLICATE */
+
+  recentActivity =
+    recentActivity.filter(
+      item =>
+        !(
+          item.link === link &&
+          item.type === type
+        )
+    );
+
+  /* ADD NEW */
+
+  recentActivity.unshift({
+    title,
+    type,
+    link,
+    time:
+      new Date()
+      .toLocaleTimeString()
+  });
+
+  /* KEEP ONLY 10 */
+
+  recentActivity =
+    recentActivity.slice(0, 10);
+
+  await chrome.storage.local.set({
+    recentActivity
+  });
+
+}
 
 
 /* =========================
@@ -58,40 +153,36 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 
 async function checkSupportForum() {
 
-  const data = await chrome.storage.local.get([
-    "monitorUrl",
-    "knownTopics",
-    "recentActivity"
-  ]);
+  const data =
+    await chrome.storage.local.get([
+      "monitorUrl",
+      "knownTopics"
+    ]);
 
   const url = data.monitorUrl;
 
-  if (!url) {
-    console.log("No URL");
-    return;
-  }
+  if (!url) return;
 
   try {
 
     console.log("Checking:", url);
 
-    const response = await fetch(
-      `${url}?t=${Date.now()}`,
-      {
-        cache: "no-cache"
-      }
-    );
+    const response =
+      await fetch(
+        `${url}?t=${Date.now()}`,
+        {
+          cache: "no-cache"
+        }
+      );
 
-    const html = await response.text();
+    const html =
+      await response.text();
 
     let knownTopics =
       data.knownTopics || {};
 
-    let recentActivity =
-      data.recentActivity || [];
-
     /* =========================
-       GET ALL TOPICS
+       GET TOPICS
     ========================= */
 
     const topicMatches = [
@@ -105,202 +196,201 @@ async function checkSupportForum() {
       topicMatches.length
     );
 
-    for (const match of topicMatches) {
+    /* =========================
+       ONLY CHECK TOP 10
+    ========================= */
+
+    const latestTopics =
+      topicMatches.slice(0, 10);
+
+    for (const match of latestTopics) {
 
       const block = match[0];
 
-      /* =========================
-         TITLE + LINK
-      ========================= */
-
-      const titleMatch =
-        block.match(
-          /class="bbp-topic-permalink" href="([^"]+)".*?>(.*?)<\/a>/s
-        );
-
-      if (!titleMatch) continue;
-
-      const link =
-        titleMatch[1];
-
-      const title =
-        titleMatch[2]
-          .replace(/<[^>]+>/g, "")
-          .trim();
-
-      /* =========================
-         STARTED BY
-      ========================= */
-
-      const startedByMatch =
-        block.match(
-          /bbp-topic-started-by[\s\S]*?bbp-author-name">(.*?)<\/span>/s
-        );
-
-      const startedBy =
-        startedByMatch
-          ? startedByMatch[1].trim()
-          : "Unknown";
-
-      /* =========================
-         FRESHNESS AUTHOR
-      ========================= */
-
-      const freshnessMatch =
-        block.match(
-          /bbp-topic-freshness-author[\s\S]*?bbp-author-name">(.*?)<\/span>/s
-        );
-
-      const freshnessAuthor =
-        freshnessMatch
-          ? freshnessMatch[1].trim()
-          : "Unknown";
-
-      /* =========================
-         REPLY COUNT
-      ========================= */
-
-      const replyMatch =
-        block.match(
-          /bbp-topic-reply-count">(\d+)</
-        );
-
-      const replies =
-        replyMatch
-          ? replyMatch[1]
-          : "0";
-
-      /* =========================
-         TIME
-      ========================= */
-
-      const timeMatch =
-        block.match(
-          /bbp-topic-freshness[\s\S]*?<a.*?>(.*?)<\/a>/s
-        );
-
-      const freshnessTime =
-        timeMatch
-          ? timeMatch[1].trim()
-          : Date.now().toString();
-
-      console.log({
-        title,
-        startedBy,
-        freshnessAuthor,
-        replies
-      });
-
-      const uniqueId =
-  `${link}_${replies}`;
-
-      /* =========================
-         NEW DETECTED
-      ========================= */
-
-      if (!knownTopics[uniqueId]) {
-
-        let type = "New Reply";
-
-        if (
-          startedBy === freshnessAuthor &&
-          replies === "0"
-        ) {
-          type = "New Ticket";
-        }
-
-        console.log(
-          "NEW DETECTED:",
-          title
-        );
-
-        /* =========================
-           NOTIFICATION
-        ========================= */
-
-        chrome.notifications.create({
-          type: "basic",
-          iconUrl: chrome.runtime.getURL(
-            "icons/bell.png"
-          ),
-          title: `🚨 ${type}`,
-          message:
-            `${title}\nBy: ${freshnessAuthor}`,
-          priority: 2
-        });
-
-
-   /* =========================
-   SMART ACTIVITY UPDATE
+/* =========================
+   TITLE + LINK
 ========================= */
 
-
-const existingIndex =
-  recentActivity.findIndex(
-    item =>
-      item.link === link &&
-      item.type === type
+const titleMatch =
+  block.match(
+    /class="bbp-topic-permalink" href="([^"]+)".*?>(.*?)<\/a>/s
   );
 
-const newItem = {
-  title,
-  type,
-  link,
-  replies,
-  time:
-    new Date()
-    .toLocaleTimeString()
-};
+if (!titleMatch) continue;
 
-if (existingIndex !== -1) {
+const link =
+  titleMatch[1];
 
-  recentActivity.splice(
-    existingIndex,
-    1
-  );
-
-}
-
-recentActivity.unshift(newItem);
-
+const title =
+  titleMatch[2]
+    .replace(/<[^>]+>/g, "")
+    .trim();
 
 /* =========================
-   KEEP ONLY LAST 10
+   AUTHOR
 ========================= */
 
-recentActivity =
-  recentActivity.slice(0, 10);
+const freshnessMatch =
+  block.match(
+    /bbp-topic-freshness-author[\s\S]*?bbp-author-name">(.*?)<\/span>/s
+  );
 
-        knownTopics[uniqueId] = true;
+const author =
+  freshnessMatch
+    ? freshnessMatch[1].trim()
+    : "Unknown";
 
+/* =========================
+   REPLIES
+========================= */
 
-const keys =
-  Object.keys(knownTopics);
+const replyMatch =
+  block.match(
+    /bbp-topic-reply-count">(\d+)</
+  );
 
-if (keys.length > 200) {
+const replies =
+  replyMatch
+    ? parseInt(replyMatch[1])
+    : 0;
 
-  delete knownTopics[
-    keys[0]
-  ];
+/* =========================
+   IGNORE OLD REPLIED TOPICS
+========================= */
+
+if (
+  replies > 0 &&
+  !knownTopics[link]
+) {
+  continue;
+}
+
+/* =========================
+   BRAND NEW TICKET
+========================= */
+
+if (!knownTopics[link]) {
+
+  knownTopics[link] = {
+    replies
+  };
+
+  console.log(
+    "NEW TICKET:",
+    title
+  );
+
+  if (!firstRun) {
+
+    triggerNotification(
+      "New Ticket",
+      title,
+      author,
+      link
+    );
+
+    await addActivity(
+      title,
+      "New Ticket",
+      link
+    );
+
+  }
 
 }
 
-      }
+/* =========================
+   EXISTING TICKET
+========================= */
+
+else {
+
+  const oldReplies =
+    parseInt(
+      knownTopics[link]
+        .replies || 0
+    );
+
+  /* =========================
+     FIRST REPLY ARRIVED
+  ========================= */
+
+  if (
+    oldReplies === 0 &&
+    replies > 0
+  ) {
+
+    knownTopics[
+      link
+    ].replies = replies;
+
+    console.log(
+      "TICKET REPLIED:",
+      title
+    );
+
+    if (!firstRun) {
+
+      triggerNotification(
+        "Ticket Replied",
+        title,
+        author,
+        link
+      );
+
+      await addActivity(
+        title,
+        "Ticket Replied",
+        link
+      );
 
     }
 
+  }
+
+}
+
+    }
+
+    /* SAVE */
+
     await chrome.storage.local.set({
-      knownTopics,
-      recentActivity
+      knownTopics
     });
+
+    firstRun = false;
 
   } catch (err) {
 
     console.error(
-      "Monitor error:",
+      "Monitor Error:",
       err
     );
 
   }
 
 }
+
+
+/* =========================
+   CLICK NOTIFICATION
+========================= */
+
+chrome.notifications.onClicked.addListener(
+  async () => {
+
+    const data =
+      await chrome.storage.local.get([
+        "monitorUrl"
+      ]);
+
+    if (data.monitorUrl) {
+
+      chrome.tabs.create({
+        url: data.monitorUrl
+      });
+
+    }
+
+  }
+);

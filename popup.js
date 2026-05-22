@@ -30,7 +30,8 @@ function extractPluginName(url) {
 
     return slug
       .replace(/-/g, " ")
-      .replace(/\b\w/g,
+      .replace(
+        /\b\w/g,
         l => l.toUpperCase()
       );
 
@@ -51,8 +52,11 @@ function renderActivity(items) {
 
   if (!items.length) {
 
-    activityFeed.innerHTML =
-      "No activity yet";
+    activityFeed.innerHTML = `
+      <div class="empty-state">
+        No activity yet
+      </div>
+    `;
 
     return;
   }
@@ -85,7 +89,25 @@ function renderActivity(items) {
 
 
 /* =========================
-   LOAD DATA
+   LOAD ACTIVITY
+========================= */
+
+async function loadActivity() {
+
+  const data =
+    await chrome.storage.local.get([
+      "recentActivity"
+    ]);
+
+  renderActivity(
+    data.recentActivity || []
+  );
+
+}
+
+
+/* =========================
+   LOAD INITIAL DATA
 ========================= */
 
 window.addEventListener(
@@ -97,6 +119,10 @@ window.addEventListener(
         "monitorUrl",
         "recentActivity"
       ]);
+
+    /* =========================
+       MONITORING INFO
+    ========================= */
 
     if (data.monitorUrl) {
 
@@ -111,7 +137,16 @@ window.addEventListener(
       saveBtn.innerText =
         "Monitoring Active";
 
+    } else {
+
+      monitorSite.innerText =
+        "No active monitoring";
+
     }
+
+    /* =========================
+       ACTIVITY
+    ========================= */
 
     renderActivity(
       data.recentActivity || []
@@ -144,9 +179,54 @@ saveBtn.addEventListener(
       return;
     }
 
+    /* =========================
+       GET PREVIOUS URL
+    ========================= */
+
+    const oldData =
+      await chrome.storage.local.get([
+        "monitorUrl"
+      ]);
+
+    const oldUrl =
+      oldData.monitorUrl || "";
+
+    /* =========================
+       URL CHANGED
+    ========================= */
+
+    if (oldUrl !== url) {
+
+      console.log(
+        "New URL detected. Cleaning old data..."
+      );
+
+      await chrome.storage.local.remove([
+        "recentActivity",
+        "knownTopics"
+      ]);
+
+      /* CLEAR UI */
+
+      activityFeed.innerHTML = `
+        <div class="empty-state">
+          No activity yet
+        </div>
+      `;
+
+    }
+
+    /* =========================
+       SAVE NEW URL
+    ========================= */
+
     await chrome.storage.local.set({
       monitorUrl: url
     });
+
+    /* =========================
+       UPDATE UI
+    ========================= */
 
     const pluginName =
       extractPluginName(url);
@@ -157,5 +237,27 @@ saveBtn.addEventListener(
     saveBtn.innerText =
       "Monitoring Active";
 
+    /* =========================
+       RELOAD ACTIVITY
+    ========================= */
+
+    loadActivity();
+
   }
 );
+
+
+/* =========================
+   LIVE UI AUTO REFRESH
+========================= */
+
+setInterval(() => {
+  loadActivity();
+}, 2000);
+
+
+/* =========================
+   INITIAL LOAD
+========================= */
+
+loadActivity();
