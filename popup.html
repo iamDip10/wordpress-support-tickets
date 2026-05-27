@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8" />
   <title>WP Support Monitor</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -21,7 +20,6 @@
     <div id="statusDot" class="status-dot idle" title="Status"></div>
   </div>
 
-  <!-- URL SETUP -->
   <div class="card setup-card">
     <label class="label">Forum URL</label>
     <div class="input-row">
@@ -33,17 +31,13 @@
     <div id="lastError" class="error-msg hidden"></div>
   </div>
 
-  <!-- TABS -->
-  <div class="tabs">
-    <button class="tab active" data-tab="activity">Activity</button>
-    <button class="tab" data-tab="debug">Debug</button>
-  </div>
-
-  <!-- ACTIVITY TAB -->
-  <div id="tab-activity" class="tab-content card feed-card">
+  <div class="card feed-card">
     <div class="feed-header">
-      <span class="feed-title">Recent Activity</span>
-      <button id="clearBtn" class="clear-btn">Clear</button>
+      <span class="feed-title">Waiting for Support</span>
+      <div class="header-right">
+        <span id="ticketCount" class="ticket-count"></span>
+        <button id="recheckBtn" class="clear-btn">↻ Refresh</button>
+      </div>
     </div>
     <div id="activityFeed" class="feed">
       <div class="empty-state">
@@ -51,25 +45,14 @@
           <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"
             stroke="currentColor" stroke-width="1.5"/>
         </svg>
-        <p>No activity yet</p>
-        <small>New tickets will appear here</small>
+        <p>All clear!</p>
+        <small>No tickets waiting for support</small>
       </div>
     </div>
   </div>
 
-  <!-- DEBUG TAB -->
-  <!-- <div id="tab-debug" class="tab-content card feed-card hidden">
-    <div class="feed-header">
-      <span class="feed-title">Parser Debug</span>
-      <button id="recheckBtn" class="clear-btn">Check Now</button>
-    </div>
-    <div id="debugPanel" class="feed debug-panel">
-      <div class="empty-state"><small>Run a check to see parsed data</small></div>
-    </div>
-  </div> -->
-
   <div class="footer">
-    Checks every 15s &nbsp;·&nbsp; Last: <span id="lastCheck">never</span>
+    Auto-refreshes every 15s &nbsp;·&nbsp; Last: <span id="lastCheck">never</span>
   </div>
 
   <script src="popup.js"></script>
